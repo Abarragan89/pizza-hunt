@@ -1,4 +1,5 @@
 const { Schema, model } = require('mongoose');
+const dateFormat = require('../utils/dateFormat')
 
 const PizzaSchema = new Schema({
     pizzaName: {
@@ -9,14 +10,35 @@ const PizzaSchema = new Schema({
     },
     createdAt: {
         type: Date,
-        default: Date.now
+        default: Date.now,
+        // this works as middleware and transforms the date before it gets to our controllers
+        get: (createdAtVal) => dateFormat(createdAtVal)
     },
     size: {
         type: String,
         default: 'Large'
     },
-    toppings: []
-});
+    toppings: [],
+    comments: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'Comment'
+        }
+    ]
+    },
+    {
+        toJSON: {
+            virtuals: true,
+            getters: true
+        },
+        id: false
+    }
+);
+
+// get the total count of comments and replies
+PizzaSchema.virtual('commentCount').get(function(){
+    return this.comments.length;
+})
 
 // create the Pizza model using the PizzaSchema
 const Pizza = model('Pizza', PizzaSchema);
